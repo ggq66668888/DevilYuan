@@ -25,9 +25,9 @@ from .DyStockDataTdx import DyStockDataTdx
 class DyStockDataGateway(object):
     """
         股票数据网络接口
-        日线数据从Wind获取，分笔数据可以从新浪，腾讯，网易，通达信获取
+        日线数据从JQData获取，分笔数据可以从新浪，腾讯，网易，通达信获取
     """
-    tradeDaysMode = "Verify" # default is verify between Wind and TuShare
+    tradeDaysMode = "Verify" # default is verify between JQData and TuShare
 
     tuShareDaysSleepTimeConst = 0 # It's set by config
     tuShareDaysSleepTime = 0
@@ -40,10 +40,10 @@ class DyStockDataGateway(object):
         self._eventEngine = eventEngine
         self._info = info
 
-        if DyStockCommon.WindPyInstalled:
-            self._wind = DyStockDataWind(self._info)
+        if DyStockCommon.JQDataPyInstalled:
+            self._JQData = DyStockDataJQData(self._info)
         else:
-            self._wind = None
+            self._JQData = None
 
         self._tuSharePro = None
 
@@ -123,44 +123,44 @@ class DyStockDataGateway(object):
 
         return tDays
 
-    def _determineTradeDays(self, windTradeDays, tuShareTradeDays):
+    def _determineTradeDays(self, JQDataTradeDays, tuShareTradeDays):
         def _errorResult():
             if self.tradeDaysMode == "Verify":
                 return None
-            elif self.tradeDaysMode == "Wind":
-                return windTradeDays
+            elif self.tradeDaysMode == "JQData":
+                return JQDataTradeDays
             else:
                 return tuShareTradeDays
 
         logType = DyLogData.error if self.tradeDaysMode == "Verify" else DyLogData.warning
 
-        if windTradeDays is None or tuShareTradeDays is None or len(windTradeDays) != len(tuShareTradeDays):
-            self._info.print("Wind交易日数据{}跟TuShare{}不一致".format(windTradeDays, tuShareTradeDays), logType)
+        if JQDataTradeDays is None or tuShareTradeDays is None or len(JQDataTradeDays) != len(tuShareTradeDays):
+            self._info.print("JQData交易日数据{}跟TuShare{}不一致".format(JQDataTradeDays, tuShareTradeDays), logType)
             return _errorResult()
             
-        for x, y in zip(windTradeDays, tuShareTradeDays):
+        for x, y in zip(JQDataTradeDays, tuShareTradeDays):
             if x != y:
-                self._info.print("Wind交易日数据{}跟TuShare{}不一致".format(windTradeDays, tuShareTradeDays), logType)
+                self._info.print("JQData交易日数据{}跟TuShare{}不一致".format(JQDataTradeDays, tuShareTradeDays), logType)
                 return _errorResult()
 
-        return windTradeDays # same
+        return JQDataTradeDays # same
 
     def getTradeDays(self, startDate, endDate):
         """
-            Wind可能出现数据错误，所以需要从其他数据源做验证
+            JQData可能出现数据错误，所以需要从其他数据源做验证
         """
-        # from Wind
-        if 'Wind' in DyStockCommon.defaultHistDaysDataSource:
-            windTradeDays = self._wind.getTradeDays(startDate, endDate)
-            tradeDays = windTradeDays
+        # from JQData
+        if 'JQData' in DyStockCommon.defaultHistDaysDataSource:
+            JQDataTradeDays = self._JQData.getTradeDays(startDate, endDate)
+            tradeDays = JQDataTradeDays
 
         # always get from TuShare or TuSharePro
         tuShareTradeDays = self._getTradeDaysFromTuShareOrPro(startDate, endDate)
         tradeDays = tuShareTradeDays
 
         # verify
-        if 'Wind' in DyStockCommon.defaultHistDaysDataSource:
-            tradeDays = self._determineTradeDays(windTradeDays, tuShareTradeDays)
+        if 'JQData' in DyStockCommon.defaultHistDaysDataSource:
+            tradeDays = self._determineTradeDays(JQDataTradeDays, tuShareTradeDays)
 
         return tradeDays
 
@@ -168,14 +168,14 @@ class DyStockDataGateway(object):
         """
             获取股票代码表
         """
-        # from Wind
-        if 'Wind' in DyStockCommon.defaultHistDaysDataSource:
-            if self._wind is None:
-                self._info.print("没有安装WindPy", DyLogData.error)
+        # from JQData
+        if 'JQData' in DyStockCommon.defaultHistDaysDataSource:
+            if self._JQData is None:
+                self._info.print("没有安装JQDataapi", DyLogData.error)
                 return None
 
-            windCodes = self._wind.getStockCodes()
-            codes = windCodes
+            JQDataCodes = self._JQData.getStockCodes()
+            codes = JQDataCodes
 
         # from TuShare
         if 'TuShare' in DyStockCommon.defaultHistDaysDataSource:
@@ -183,21 +183,21 @@ class DyStockDataGateway(object):
             codes = tuShareCodes
 
         # verify
-        if 'Wind' in DyStockCommon.defaultHistDaysDataSource and 'TuShare' in DyStockCommon.defaultHistDaysDataSource:
-            if windCodes is None or tuShareCodes is None or len(windCodes) != len(tuShareCodes):
-                self._info.print("Wind股票代码表跟TuShare不一致", DyLogData.error)
+        if 'JQData' in DyStockCommon.defaultHistDaysDataSource and 'TuShare' in DyStockCommon.defaultHistDaysDataSource:
+            if JQDataCodes is None or tuShareCodes is None or len(JQDataCodes) != len(tuShareCodes):
+                self._info.print("JQData股票代码表跟TuShare不一致", DyLogData.error)
                 return None
 
-            for code, name in windCodes.items():
+            for code, name in JQDataCodes.items():
                 name_ = tuShareCodes.get(code)
                 if name_ is None or name_ != name:
-                    self._info.print("Wind股票代码表跟TuShare不一致", DyLogData.error)
+                    self._info.print("JQData股票代码表跟TuShare不一致", DyLogData.error)
                     return None
 
         return codes
 
     def getSectorStockCodes(self, sectorCode, startDate, endDate):
-        return self._wind.getSectorStockCodes(sectorCode, startDate, endDate)
+        return self._JQData.getSectorStockCodes(sectorCode, startDate, endDate)
 
     def getDays(self, code, startDate, endDate, fields, name=None):
         """
@@ -205,10 +205,10 @@ class DyStockDataGateway(object):
             @return: MongoDB BSON format like [{'datetime': value, 'indicator': value}]
                      None - erros
         """
-        # get from Wind
-        if 'Wind' in DyStockCommon.defaultHistDaysDataSource:
-            windDf = self._wind.getDays(code, startDate, endDate, fields, name)
-            df = windDf
+        # get from JQData
+        if 'JQData' in DyStockCommon.defaultHistDaysDataSource:
+            JQDataDf = self._JQData.getDays(code, startDate, endDate, fields, name)
+            df = JQDataDf
 
         # get from TuShare or TuSharePro
         if 'TuShare' in DyStockCommon.defaultHistDaysDataSource:
@@ -219,17 +219,17 @@ class DyStockDataGateway(object):
             df = tuShareDf
 
         # verify data
-        if 'Wind' in DyStockCommon.defaultHistDaysDataSource and 'TuShare' in DyStockCommon.defaultHistDaysDataSource:
-            if windDf is None or tuShareDf is None or windDf.shape[0] != tuShareDf.shape[0]:
-                self._info.print("{}({})日线数据[{}, {}]: Wind和TuShare不相同".format(code, name, startDate, endDate), DyLogData.error)
+        if 'JQData' in DyStockCommon.defaultHistDaysDataSource and 'TuShare' in DyStockCommon.defaultHistDaysDataSource:
+            if JQDataDf is None or tuShareDf is None or JQDataDf.shape[0] != tuShareDf.shape[0]:
+                self._info.print("{}({})日线数据[{}, {}]: JQData和TuShare不相同".format(code, name, startDate, endDate), DyLogData.error)
                 return None
 
-            # remove adjfactor because Sina adjfactor is different with Wind
+            # remove adjfactor because Sina adjfactor is different with JQData
             fields_ = [x for x in fields if x != 'adjfactor']
             fields_ = ['datetime'] + fields_
 
-            if (windDf[fields_].values != tuShareDf[fields_].values).sum() > 0:
-                self._info.print("{}({})日线数据[{}, {}]: Wind和TuShare不相同".format(code, name, startDate, endDate), DyLogData.error)
+            if (JQDataDf[fields_].values != tuShareDf[fields_].values).sum() > 0:
+                self._info.print("{}({})日线数据[{}, {}]: JQData和TuShare不相同".format(code, name, startDate, endDate), DyLogData.error)
                 return None
 
         # BSON
@@ -260,7 +260,7 @@ class DyStockDataGateway(object):
     def _getDaysFromTuShareOld(self, code, startDate, endDate, fields, name=None, verify=False):
         """
             从tushare获取股票日线数据。
-            保持跟Wind接口一致，由于没法从网上获取净流入量和金额，所以这两个字段没有。
+            保持跟JQData接口一致，由于没法从网上获取净流入量和金额，所以这两个字段没有。
             策略角度看，其实这两个字段也没什么用。
             @verify: True - 不同网上的相同字段会相互做验证。
             @return: df['datetime', indicators]

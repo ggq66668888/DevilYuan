@@ -18,12 +18,12 @@ class DyStockMongoDbConfigDlg(QDialog):
     def _createCommonDaysTab(self, tabWidget):
         widget = QTabWidget()
 
-        self._createWindTab(widget)
+        self._createJQDataTab(widget)
         self._createTuShareTab(widget)
 
         tabWidget.addTab(widget, "通用和日线数据")
 
-    def _createWindTab(self, tabWidget):
+    def _createJQDataTab(self, tabWidget):
         widget = QWidget()
 
         # common data
@@ -31,32 +31,32 @@ class DyStockMongoDbConfigDlg(QDialog):
         labelTradeDayTableName = QLabel('股票交易日数据库表')
         labelCodeTableName = QLabel('股票代码数据库表')
 
-        self._lineEditStockCommonDbWind = QLineEdit(self._data["CommonDays"]["Wind"]['stockCommonDb'])
-        self._lineEditTradeDayTableNameWind = QLineEdit(self._data["CommonDays"]["Wind"]['tradeDayTableName'])
-        self._lineEditCodeTableNameWind = QLineEdit(self._data["CommonDays"]["Wind"]['codeTableName'])
+        self._lineEditStockCommonDbJQData = QLineEdit(self._data["CommonDays"]["JQData"]['stockCommonDb'])
+        self._lineEditTradeDayTableNameJQData = QLineEdit(self._data["CommonDays"]["JQData"]['tradeDayTableName'])
+        self._lineEditCodeTableNameJQData = QLineEdit(self._data["CommonDays"]["JQData"]['codeTableName'])
 
         # days data
         labelStockDaysDb = QLabel('股票历史日线数据库')
-        self._lineEditStockDaysDbWind = QLineEdit(self._data["CommonDays"]["Wind"]['stockDaysDb'])
+        self._lineEditStockDaysDbJQData = QLineEdit(self._data["CommonDays"]["JQData"]['stockDaysDb'])
 
         # 布局
         vbox = QVBoxLayout()
  
         vbox.addWidget(labelStockCommonDb)
-        vbox.addWidget(self._lineEditStockCommonDbWind)
+        vbox.addWidget(self._lineEditStockCommonDbJQData)
         vbox.addWidget(labelTradeDayTableName)
-        vbox.addWidget(self._lineEditTradeDayTableNameWind)
+        vbox.addWidget(self._lineEditTradeDayTableNameJQData)
         vbox.addWidget(labelCodeTableName)
-        vbox.addWidget(self._lineEditCodeTableNameWind)
+        vbox.addWidget(self._lineEditCodeTableNameJQData)
 
         vbox.addWidget(QLabel('                                                                                             '))
 
         vbox.addWidget(labelStockDaysDb)
-        vbox.addWidget(self._lineEditStockDaysDbWind)
+        vbox.addWidget(self._lineEditStockDaysDbJQData)
  
         widget.setLayout(vbox)
 
-        tabWidget.addTab(widget, "Wind")
+        tabWidget.addTab(widget, "JQData")
 
     def _createTuShareTab(self, tabWidget):
         widget = QWidget()
@@ -169,17 +169,17 @@ class DyStockMongoDbConfigDlg(QDialog):
 
     def _ok(self):
         # get data from UI
-        data = {"Connection": {}, "CommonDays": {"Wind": {}, "TuShare": {}}, "Ticks": {}}
+        data = {"Connection": {}, "CommonDays": {"JQData": {}, "TuShare": {}}, "Ticks": {}}
 
         # host & port
         data["Connection"]["Host"] = self._lineEditHost.text()
         data["Connection"]["Port"] = int(self._lineEditPort.text())
 
-        # Wind
-        data["CommonDays"]["Wind"]['stockCommonDb'] = self._lineEditStockCommonDbWind.text()
-        data["CommonDays"]["Wind"]['tradeDayTableName'] = self._lineEditTradeDayTableNameWind.text()
-        data["CommonDays"]["Wind"]['codeTableName'] = self._lineEditCodeTableNameWind.text()
-        data["CommonDays"]["Wind"]['stockDaysDb'] = self._lineEditStockDaysDbWind.text()
+        # JQData
+        data["CommonDays"]["JQData"]['stockCommonDb'] = self._lineEditStockCommonDbJQData.text()
+        data["CommonDays"]["JQData"]['tradeDayTableName'] = self._lineEditTradeDayTableNameJQData.text()
+        data["CommonDays"]["JQData"]['codeTableName'] = self._lineEditCodeTableNameJQData.text()
+        data["CommonDays"]["JQData"]['stockDaysDb'] = self._lineEditStockDaysDbJQData.text()
 
         # TuShare
         data["CommonDays"]["TuShare"]['stockCommonDb'] = self._lineEditStockCommonDbTuShare.text()

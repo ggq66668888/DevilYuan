@@ -3,7 +3,7 @@ import pandas as pd
 from collections import OrderedDict
 
 try:
-    from WindPy import *
+    from jqdatasdk import *
 except ImportError:
     pass
 
@@ -11,8 +11,8 @@ from DyCommon.DyCommon import *
 from ...Common.DyStockCommon import *
 
 
-class DyStockDataWind(object):
-    """ Wind数据接口 """
+class DyStockDataJQData(object):
+    """ JQData数据接口 """
 
     sectorCodeWindMap = {DyStockCommon.sz50Index: 'a00103010b000000',
                           DyStockCommon.hs300Index: 'a001030201000000',
@@ -40,24 +40,24 @@ class DyStockDataWind(object):
 
         tries = 4
         for i in range(1, tries+1):
-            windData = self._gateway.wsd(code, fields_, startDate, endDate)
+            JQDataData = self._gateway.wsd(code, fields_, startDate, endDate)
 
-            if windData.ErrorCode != 0:
-                errorStr = "从Wind获取{0}:{1}, [{2}, {3}]WSD错误: {4}".format(code, name, startDate, endDate, windData.Data[0][0])
+            if JQDataData.ErrorCode != 0:
+                errorStr = "从JQData获取{0}:{1}, [{2}, {3}]WSD错误: {4}".format(code, name, startDate, endDate, JQDataData.Data[0][0])
                 if 'Timeout' in errorStr and i < tries:
                     print(errorStr)
                     sleep(i)
                     continue
             break
 
-        if windData.ErrorCode != 0:
+        if JQDataData.ErrorCode != 0:
             self._info.print(errorStr, DyLogData.error)
             return None
 
         try:
-            df = pd.DataFrame(windData.Data,
-                              index=[x.lower() for x in windData.Fields],
-                              columns=windData.Times)
+            df = pd.DataFrame(JQDataData.Data,
+                              index=[x.lower() for x in JQDataData.Fields],
+                              columns=JQDataData.Times)
 
             df = df.T
 
@@ -83,14 +83,14 @@ class DyStockDataWind(object):
 
     def _login(self):
         if not self._gateway.isconnected():
-            self._info.print("登录Wind...")
+            self._info.print("登录JQData...")
 
             data = self._gateway.start()
             if data.ErrorCode != 0:
-                self._info.print("登录Wind失败: ErrorCode={}, Data={}".format(data.ErrorCode, data.Data), DyLogData.error)
+                self._info.print("登录JQData失败: ErrorCode={}, Data={}".format(data.ErrorCode, data.Data), DyLogData.error)
                 return False
 
-            self._info.print("登录Wind成功")
+            self._info.print("登录JQData成功")
 
         return True
 
@@ -98,7 +98,7 @@ class DyStockDataWind(object):
         if not self._login():
             return None
 
-        self._info.print("开始从Wind获取交易日数据[{}, {}]...".format(startDate, endDate))
+        self._info.print("开始从JQData获取交易日数据[{}, {}]...".format(startDate, endDate))
 
         data = w.tdayscount(startDate, endDate)
         if data.ErrorCode == 0:
@@ -109,14 +109,14 @@ class DyStockDataWind(object):
             if data.ErrorCode == 0:
                 return [x.strftime('%Y-%m-%d') for x in data.Data[0]]
 
-        self._info.print("从Wind获取交易日数据失败[{0}, {1}]: {2}".format(startDate, endDate, data.Data[0][0]), DyLogData.error)
+        self._info.print("从JQData获取交易日数据失败[{0}, {1}]: {2}".format(startDate, endDate, data.Data[0][0]), DyLogData.error)
         return None
 
     def getStockCodes(self):
         if not self._login():
             return None
 
-        self._info.print("开始从Wind获取股票代码表...")
+        self._info.print("开始从JQData获取股票代码表...")
 
         date = datetime.today()
         date = date.strftime("%Y%m%d")
@@ -124,21 +124,21 @@ class DyStockDataWind(object):
         data = w.wset("SectorConstituent", "date={0};sectorId=a001010100000000".format(date))
 
         if data.ErrorCode != 0:
-            self._info.print("从Wind获取股票代码表失败: {0}!".format(data.Data[0][0]), DyLogData.error)
+            self._info.print("从JQData获取股票代码表失败: {0}!".format(data.Data[0][0]), DyLogData.error)
             return None
 
         codes = {}
         for code, name in zip(data.Data[1], data.Data[2]):
             codes[code] = name
 
-        self._info.print("从Wind获取股票代码表成功")
+        self._info.print("从JQData获取股票代码表成功")
         return codes
 
     def getSectorStockCodes(self, sectorCode, startDate, endDate):
         if not self._login():
             return None
 
-        self._info.print("开始从Wind获取[{0}]股票代码表[{1}, {2}]...".format(DyStockCommon.sectors[sectorCode], startDate, endDate))
+        self._info.print("开始从JQData获取[{0}]股票代码表[{1}, {2}]...".format(DyStockCommon.sectors[sectorCode], startDate, endDate))
 
         dates = DyTime.getDates(startDate, endDate)
 
@@ -150,10 +150,10 @@ class DyStockDataWind(object):
             date = date_.strftime("%Y%m%d")
             date_ = date_.strftime("%Y-%m-%d")
 
-            data = w.wset("SectorConstituent", "date={0};sectorId={1}".format(date, self.sectorCodeWindMap[sectorCode]))
+            data = w.wset("SectorConstituent", "date={0};sectorId={1}".format(date, self.sectorCodeJQDataMap[sectorCode]))
 
             if data.ErrorCode != 0:
-                self._info.print("从Wind获取[{0}]股票代码表[{1}]失败: {2}!".format(DyStockCommon.sectors[sectorCode], date_, data.Data[0][0]), DyLogData.error)
+                self._info.print("从JQData获取[{0}]股票代码表[{1}]失败: {2}!".format(DyStockCommon.sectors[sectorCode], date_, data.Data[0][0]), DyLogData.error)
                 return None
 
             codes = {}
@@ -165,7 +165,7 @@ class DyStockDataWind(object):
 
             progress.update()
 
-        self._info.print("从Wind获取[{0}]股票代码表[{1}, {2}]完成".format(DyStockCommon.sectors[sectorCode], startDate, endDate))
+        self._info.print("从JQData获取[{0}]股票代码表[{1}, {2}]完成".format(DyStockCommon.sectors[sectorCode], startDate, endDate))
 
         return codesDict
 

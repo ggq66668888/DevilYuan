@@ -17,7 +17,7 @@ class DyStockConfig(object):
 
     defaultMongoDb = {"Connection": {"Host": "localhost", "Port": 27017},
                       "CommonDays": {
-                          "Wind": {
+                          "JQData": {
                               "stockCommonDb": 'stockCommonDb',
                               'tradeDayTableName': "tradeDayTable",
                               'codeTableName': "codeTable",
@@ -46,10 +46,10 @@ class DyStockConfig(object):
 
 
     def getDefaultHistDaysDataSource():
-        if DyStockCommon.WindPyInstalled:
-            return {"Wind": True, "TuShare": False}
+        if DyStockCommon.JQDatasdkInstalled:
+            return {"JQData": True, "TuShare": False}
 
-        return {"Wind": False, "TuShare": True}
+        return {"JQData": False, "TuShare": True}
 
     def _configStockHistDaysDataSource():
         file = DyStockConfig.getStockHistDaysDataSourceFileName()
@@ -65,8 +65,8 @@ class DyStockConfig(object):
 
     def configStockHistDaysDataSource(data):
         DyStockCommon.defaultHistDaysDataSource = []
-        if data.get('Wind'):
-            DyStockCommon.defaultHistDaysDataSource.append('Wind')
+        if data.get('JQData'):
+            DyStockCommon.defaultHistDaysDataSource.append('JQData')
 
         if data.get('TuShare'):
             DyStockCommon.defaultHistDaysDataSource.append('TuShare')
@@ -123,12 +123,12 @@ class DyStockConfig(object):
         DyStockMongoDbEngine.host = data['Connection']['Host']
         DyStockMongoDbEngine.port = data['Connection']['Port']
 
-        # Wind
-        DyStockMongoDbEngine.stockCommonDb = data["CommonDays"]["Wind"]['stockCommonDb']
-        DyStockMongoDbEngine.tradeDayTableName = data["CommonDays"]["Wind"]['tradeDayTableName']
-        DyStockMongoDbEngine.codeTableName = data["CommonDays"]["Wind"]['codeTableName']
+        # JQData
+        DyStockMongoDbEngine.stockCommonDb = data["CommonDays"]["JQData"]['stockCommonDb']
+        DyStockMongoDbEngine.tradeDayTableName = data["CommonDays"]["JQData"]['tradeDayTableName']
+        DyStockMongoDbEngine.codeTableName = data["CommonDays"]["JQData"]['codeTableName']
 
-        DyStockMongoDbEngine.stockDaysDb = data["CommonDays"]["Wind"]['stockDaysDb']
+        DyStockMongoDbEngine.stockDaysDb = data["CommonDays"]["JQData"]['stockDaysDb']
 
         # TuShare
         DyStockMongoDbEngine.stockCommonDbTuShare = data["CommonDays"]["TuShare"]['stockCommonDb']

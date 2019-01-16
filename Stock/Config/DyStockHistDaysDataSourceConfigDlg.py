@@ -12,8 +12,8 @@ from .DyStockConfig import DyStockConfig
 class DyStockHistDaysDataSourceConfigDlg(QDialog):
     tradeDaysMode = OrderedDict\
                     ([
-                        ('Wind和TuShare相互验证(默认)', 'Verify'),
-                        ('若冲突，则以Wind为主', 'Wind'),
+                        ('JQData和TuShare相互验证(默认)', 'Verify'),
+                        ('若冲突，则以JQData为主', 'JQData'),
                         ('若冲突，则以TuShare为主', 'TuShare'),
                     ])
 
@@ -29,8 +29,8 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         # 控件
         label = QLabel('股票历史日线数据源')
 
-        self._windCheckBox = QCheckBox('Wind')
-        self._windCheckBox.clicked.connect(self._windCheckBoxClicked)
+        self._JQDataCheckBox = QCheckBox('Wind')
+        self._JQDataCheckBox.clicked.connect(self._JQDataCheckBoxClicked)
 
         self._tuShareCheckBox = QCheckBox('TuShare')
         self._tuShareCheckBox.clicked.connect(self._tuShareCheckBoxClicked)
@@ -41,13 +41,13 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         self._tuShareProTokenPushButton.clicked.connect(self._showTuShareProToken)
         self._tuShareProTokenLineEdit = QLineEdit()
 
-        description = """默认使用Wind
+        description = """默认使用JQData
 
-只选Wind：更新交易日数据，股票代码表和股票历史日线数据到Wind对应的数据库
+只选JQData：更新交易日数据，股票代码表和股票历史日线数据到JQData对应的数据库
 
 只选TuShare：更新交易日数据，股票代码表和股票历史日线数据到TuShare对应的数据库
 
-选两个：更新交易日数据，股票代码表和股票历史日线数据到Wind对应的数据库，并同时做两个源的数据验证
+选两个：更新交易日数据，股票代码表和股票历史日线数据到JQData对应的数据库，并同时做两个源的数据验证
 
 交易日数据，股票代码表和股票历史日线数据的载入也是基于上面选择的数据库
         """
@@ -61,7 +61,7 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         okPushButton.clicked.connect(self._ok)
 
         self._tradeDaysComboBox = QComboBox()
-        descriptionTradeDays = "Wind有时交易日数据可能出错，所以选Wind时，总是跟TuShare做验证，由用户选择该如何做。"
+        descriptionTradeDays = "JQData有时交易日数据可能出错，所以选JQData时，总是跟TuShare做验证，由用户选择该如何做。"
         tradeDaysTextEdit = QTextEdit()
         tradeDaysTextEdit.setPlainText(descriptionTradeDays)
         tradeDaysTextEdit.setReadOnly(True)
@@ -74,7 +74,7 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         grid.setSpacing(10)
  
         grid.addWidget(label, 0, 0)
-        grid.addWidget(self._windCheckBox, 1, 0)
+        grid.addWidget(self._JQDataCheckBox, 1, 0)
         grid.addWidget(self._tuShareCheckBox, 2, 0)
         grid.addWidget(self._tuShareProCheckBox, 3, 0)
         grid.addWidget(self._tuShareProTokenPushButton, 4, 0)
@@ -100,12 +100,12 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         self.setLayout(grid)
 
         # set data source to UI
-        if self._data.get('Wind'):
-            self._windCheckBox.setChecked(True)
+        if self._data.get('JQData'):
+            self._JQDataCheckBox.setChecked(True)
 
-        if sys.platform != 'win32': # Wind only supported at Windows.
-            self._windCheckBox.setEnabled(False)
-            self._windCheckBox.setChecked(False)
+        if sys.platform != 'win32': # JQData only supported at JQDataows.
+            self._JQDataCheckBox.setEnabled(False)
+            self._JQDataCheckBox.setChecked(False)
 
         enableTuSharePro = False
         if self._data.get('TuShare'):
@@ -192,9 +192,9 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
 
     def _ok(self):
         # data source
-        data = {'Wind': False, 'TuShare': False}
-        if self._windCheckBox.isChecked():
-            data['Wind'] = True
+        data = {'JQData': False, 'TuShare': False}
+        if self._JQDataCheckBox.isChecked():
+            data['JQData'] = True
 
         if self._tuShareCheckBox.isChecked():
             data['TuShare'] = True
@@ -271,21 +271,21 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         self.reject()
 
     def _enableTradeDaysComboBox(self):
-        if self._windCheckBox.isChecked():
+        if self._JQDataCheckBox.isChecked():
             self._tradeDaysComboBox.setEnabled(True)
         else:
             self._tradeDaysComboBox.setEnabled(False)
 
     def _checkBoxClicked(self):
-        if not self._windCheckBox.isChecked() and not self._tuShareCheckBox.isChecked():
+        if not self._JQDataCheckBox.isChecked() and not self._tuShareCheckBox.isChecked():
             if sys.platform == 'win32':
-                self._windCheckBox.setChecked(True)
+                self._JQDataCheckBox.setChecked(True)
             else:
                 self._tuShareCheckBox.setChecked(True)
 
         self._enableTradeDaysComboBox()
 
-    def _windCheckBoxClicked(self):
+    def _JQDataCheckBoxClicked(self):
         self._checkBoxClicked()
 
     def _tuShareCheckBoxClicked(self):
