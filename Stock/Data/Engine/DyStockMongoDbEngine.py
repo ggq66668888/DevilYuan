@@ -12,7 +12,7 @@ class DyStockMongoDbEngine(object):
 
     stockTicksDb = 'stockTicksDb' # 股票分笔数据
 
-    # default DB for Wind Data Source
+    # default DB for JQData Data Source
     stockCommonDb = 'stockCommonDb'
     tradeDayTableName = "tradeDayTable"
     codeTableName = "codeTable"
@@ -40,7 +40,7 @@ class DyStockMongoDbEngine(object):
         self._client = pymongo.MongoClient(self.host, self.port)
 
     def _getTradeDayTableCollection(self):
-        if 'Wind' in DyStockCommon.defaultHistDaysDataSource:
+        if 'JQData' in DyStockCommon.defaultHistDaysDataSource:
             collection = self._client[self.stockCommonDb][self.tradeDayTableName]
         else:
             collection = self._client[self.stockCommonDbTuShare][self.tradeDayTableNameTuShare]
@@ -48,7 +48,7 @@ class DyStockMongoDbEngine(object):
         return collection
 
     def _getCodeTableCollection(self):
-        if 'Wind' in DyStockCommon.defaultHistDaysDataSource:
+        if 'JQData' in DyStockCommon.defaultHistDaysDataSource:
             collection = self._client[self.stockCommonDb][self.codeTableName]
         else:
             collection = self._client[self.stockCommonDbTuShare][self.codeTableNameTuShare]
@@ -56,7 +56,7 @@ class DyStockMongoDbEngine(object):
         return collection
 
     def _getStockDaysDb(self):
-        if 'Wind' in DyStockCommon.defaultHistDaysDataSource:
+        if 'JQData' in DyStockCommon.defaultHistDaysDataSource:
             db = self._client[self.stockDaysDb]
         else:
             db = self._client[self.stockDaysDbTuShare]

@@ -755,7 +755,7 @@
     <Compile Include="Stock\Data\Engine\DyStockMongoDbEngine.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Stock\Data\Gateway\DyStockDataWind.py">
+    <Compile Include="Stock\Data\Gateway\DyStockDataJQData.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Stock\BackTesting\Engine\Strategy\DyStockBackTestingCtaEngine.py" />

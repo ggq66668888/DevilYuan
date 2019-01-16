@@ -16,7 +16,7 @@ from tushare.stock import cons as ct
 from DyCommon.DyCommon import *
 from EventEngine.DyEvent import *
 from ..DyStockDataCommon import *
-from .DyStockDataWind import *
+from .DyStockDataJQData import *
 from ...Common.DyStockCommon import *
 from .DyStockDataTicksGateway import DyStockDataTicksGateway
 from .DyStockDataTdx import DyStockDataTdx

@@ -44,7 +44,7 @@ class DyStockHistTicksAckData:
                 ],
 """
 class DyStockDataCommon:
-    # Wind的volume是成交量，单位是股数。数据库里的成交量也是股数。
+    # JQData的volume是成交量，单位是股数。数据库里的成交量也是股数。
     dayIndicators = ['open', 'high', 'low', 'close', 'volume', 'amt', 'turn', 'adjfactor']
     adjFactor = 'adjfactor'
 

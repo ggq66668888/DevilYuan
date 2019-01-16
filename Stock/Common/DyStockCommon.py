@@ -50,9 +50,9 @@ class DyStockCommon(object):
     limitUpPct = 9.946 # 涨停时的涨幅(%), >=
     limitDownPct = -9.946 # 跌停时的涨幅(%), <=
 
-    # Devil启动时从配置文件读入，这个配置在Stock模块里共享。默认是Wind
-    defaultHistDaysDataSource = ['Wind'] # Wind and TuShare，如果数据源是两个或者以上，则数据相互做验证。单个则不做验证。这里包括验证交易日数据，股票代码表和日线数据。
-    WindPyInstalled = True
+    # Devil启动时从配置文件读入，这个配置在Stock模块里共享。默认是JQData
+    defaultHistDaysDataSource = ['JQData'] # JQData and TuShare，如果数据源是两个或者以上，则数据相互做验证。单个则不做验证。这里包括验证交易日数据，股票代码表和日线数据。
+    JQDatasdkInstalled = True
     useTuSharePro = False
     tuShareProToken = None 
 
