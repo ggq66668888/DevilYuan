@@ -2,11 +2,11 @@
 from Stock.Common.DyStockCommon import DyStockCommon
 
 try:
-    from WindPy import *
+    from JQDatasdk import *
 except ImportError:
-    if DyStockCommon.WindPyInstalled:
-        print("DevilYuan-Warnning: Import WindPy error, switch default data source of stock history days to TuShare!")
-        DyStockCommon.WindPyInstalled = False
+    if DyStockCommon.JQDatasdkInstalled:
+        print("DevilYuan-Warnning: Import JQDatasdk error, switch default data source of stock history days to TuShare!")
+        DyStockCommon.JQDatasdkInstalled = False
 
 
 import os
