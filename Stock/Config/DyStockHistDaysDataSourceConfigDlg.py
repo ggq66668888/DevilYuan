@@ -29,7 +29,7 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         # 控件
         label = QLabel('股票历史日线数据源')
 
-        self._JQDataCheckBox = QCheckBox('Wind')
+        self._JQDataCheckBox = QCheckBox('JQData')
         self._JQDataCheckBox.clicked.connect(self._JQDataCheckBoxClicked)
 
         self._tuShareCheckBox = QCheckBox('TuShare')
