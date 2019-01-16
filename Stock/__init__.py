@@ -2,7 +2,7 @@
 from Stock.Common.DyStockCommon import DyStockCommon
 
 try:
-    from JQDatasdk import *
+    from jqdatasdk import *
 except ImportError:
     if DyStockCommon.JQDatasdkInstalled:
         print("DevilYuan-Warnning: Import JQDatasdk error, switch default data source of stock history days to TuShare!")
