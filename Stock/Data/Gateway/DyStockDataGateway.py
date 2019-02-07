@@ -40,7 +40,7 @@ class DyStockDataGateway(object):
         self._eventEngine = eventEngine
         self._info = info
 
-        if DyStockCommon.JQDataPyInstalled:
+        if DyStockCommon.JQDatasdkInstalled:
             self._JQData = DyStockDataJQData(self._info)
         else:
             self._JQData = None
@@ -190,7 +190,7 @@ class DyStockDataGateway(object):
 
             for code, name in JQDataCodes.items():
                 name_ = tuShareCodes.get(code)
-                if name_ is None or name_ != name:
+                if name_ is None or name is None:
                     self._info.print("JQData股票代码表跟TuShare不一致", DyLogData.error)
                     return None
 

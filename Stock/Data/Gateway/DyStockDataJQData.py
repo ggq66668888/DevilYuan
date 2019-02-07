@@ -1,12 +1,13 @@
 from time import sleep
 import pandas as pd
 from collections import OrderedDict
-
+from time import sleep
+import pandas as pd
 try:
     from jqdatasdk import *
 except ImportError:
     pass
-
+import baostock as bs
 from DyCommon.DyCommon import *
 from ...Common.DyStockCommon import *
 
@@ -14,16 +15,8 @@ from ...Common.DyStockCommon import *
 class DyStockDataJQData(object):
     """ JQData数据接口 """
 
-    sectorCodeWindMap = {DyStockCommon.sz50Index: 'a00103010b000000',
-                          DyStockCommon.hs300Index: 'a001030201000000',
-                          DyStockCommon.zz500Index: 'a001030208000000'
-                          }
-
-
     def __init__(self, info):
         self._info = info
-
-        self._gateway = w
 
     def getDays(self, code, startDate, endDate, fields, name=None):
         """
@@ -31,68 +24,76 @@ class DyStockDataJQData(object):
                      None - errors
                      [] - no data
         """
-        if not fields:
-            self._info.print('没有指定获取的指标', DyLogData.error)
+        JQcode = normalize_code(code)
+        # 默认取所有字段
+        fields_ = ['open', 'close', 'low', 'high', 'volume', 'money', 'factor', 'high_limit','low_limit', 'avg', 'pre_close', 'paused']
+        fields__ = 'date,turn,tradestatus,pctChg,isST'
+        retry = 3
+        for _ in range(retry):
+            try:
+                # JQ日数据
+                JQDf = get_price(JQcode, start_date=startDate, end_date=endDate, frequency='daily', fields=fields_, fq='post')
+
+                # 从baosotck获取turn等数据
+                rs = bs.query_history_k_data_plus(code, fields__, start_date=startDate, end_date=endDate, frequency="d",
+                                                  adjustflag="3")
+                data_list = []
+                while (rs.error_code == '0') & rs.next():
+                    # 获取一条记录，将记录合并在一起
+                    data_list.append(rs.get_row_data())
+                bsDf = pd.DataFrame(data_list, columns=rs.fields)
+                bsDf = bsDf.set_index('date')
+                break
+            except Exception as ex:
+                lastEx = ex
+                print("{}({})JQ或者baostock异常[{}, {}]: {}, retrying...".format(code, name, startDate, endDate, ex))
+                sleep(1)
+        else:
+            self._info.print(
+                "{}({})JQ或者baostock异常[{}, {}]: {}, retried {} times".format(code, name, startDate, endDate, lastEx,
+                                                                          retry), DyLogData.error)
             return None
 
-        # 添加'volume'，由此判断停牌是否
-        fields_ = ','.join(fields) if 'volume' in fields else ','.join(fields + ['volume'])
+        # 清洗数据
+        JQDf = JQDf.dropna(axis=0) #去掉空行
+        df = JQDf.join(bsDf)
+        df = df.dropna(axis=0)
+        if df.isnull().sum().sum() > 0:
+            print("{}({})JQ有些数据缺失[{}, {}]".format(code, name, startDate, endDate))
+            print(df[df.isnull().any(axis=1)])
 
-        tries = 4
-        for i in range(1, tries+1):
-            JQDataData = self._gateway.wsd(code, fields_, startDate, endDate)
-
-            if JQDataData.ErrorCode != 0:
-                errorStr = "从JQData获取{0}:{1}, [{2}, {3}]WSD错误: {4}".format(code, name, startDate, endDate, JQDataData.Data[0][0])
-                if 'Timeout' in errorStr and i < tries:
-                    print(errorStr)
-                    sleep(i)
-                    continue
-            break
-
-        if JQDataData.ErrorCode != 0:
-            self._info.print(errorStr, DyLogData.error)
+            self._info.print("{}({})JQ有些数据缺失[{}, {}]".format(code, name, startDate, endDate),
+                                 DyLogData.warning)
             return None
 
-        try:
-            df = pd.DataFrame(JQDataData.Data,
-                              index=[x.lower() for x in JQDataData.Fields],
-                              columns=JQDataData.Times)
+        # change to Wind's indicators
+        df = df.sort_index()
+        df.index.name = 'datetime'
+        df.reset_index(inplace=True)  # 把时间索引转成列
+        df.rename(columns={'money': 'amt', 'factor': 'adjfactor'},
+                      inplace=True)
 
-            df = df.T
-
-            df = df.dropna(axis=1, how='all') # 去除全为NaN的列，比如指数数据，没有'mf_vol'
-            df = df.ix[df['volume'] > 0, :] # 去除停牌的数据
-
-            if 'volume' not in fields:
-                del df['volume']
-
-            df.reset_index(inplace=True) # 把时间索引转成列
-            df.rename(columns={'index': 'datetime'}, inplace=True)
-
-            # 把日期的HH:MM:SS转成 00:00:00
-            df['datetime'] = df['datetime'].map(lambda x: x.strftime('%Y-%m-%d'))
-            df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d')
-
-            df = df[['datetime'] + fields]
-
-        except:
-            df = pd.DataFrame(columns=['datetime'] + fields)
+        # select according @fields
+        #df = df[['datetime'] + fields]
 
         return df
 
     def _login(self):
-        if not self._gateway.isconnected():
-            self._info.print("登录JQData...")
+        self._info.print("登录JQData...")
 
-            data = self._gateway.start()
-            if data.ErrorCode != 0:
-                self._info.print("登录JQData失败: ErrorCode={}, Data={}".format(data.ErrorCode, data.Data), DyLogData.error)
-                return False
-
+        try:
+            auth('13701159730', '159730')
             self._info.print("登录JQData成功")
+            lg = bs.login()
+            # 显示登陆返回信息
+            self._info.print('login respond error_code:' + lg.error_code)
+            self._info.print('login respond  error_msg:' + lg.error_msg)
+            return True
 
-        return True
+        except Exception as e:
+            self._info.print("登录JQData失败: ErrorCode={}, Data={}".format('', e), DyLogData.error)
+            return False
+
 
     def getTradeDays(self, startDate, endDate):
         if not self._login():
@@ -100,17 +101,9 @@ class DyStockDataJQData(object):
 
         self._info.print("开始从JQData获取交易日数据[{}, {}]...".format(startDate, endDate))
 
-        data = w.tdayscount(startDate, endDate)
-        if data.ErrorCode == 0:
-            if data.Data[0][0] == 0:
-                return [] # no trade days between startDate and endDate
-            
-            data = self._gateway.tdays(startDate, endDate)
-            if data.ErrorCode == 0:
-                return [x.strftime('%Y-%m-%d') for x in data.Data[0]]
-
-        self._info.print("从JQData获取交易日数据失败[{0}, {1}]: {2}".format(startDate, endDate, data.Data[0][0]), DyLogData.error)
-        return None
+        data = get_trade_days(start_date=startDate, end_date=endDate)
+        data = data.tolist()
+        return [x.strftime('%Y-%m-%d') for x in data]
 
     def getStockCodes(self):
         if not self._login():
@@ -118,17 +111,16 @@ class DyStockDataJQData(object):
 
         self._info.print("开始从JQData获取股票代码表...")
 
-        date = datetime.today()
-        date = date.strftime("%Y%m%d")
+        code = get_all_securities()
 
-        data = w.wset("SectorConstituent", "date={0};sectorId=a001010100000000".format(date))
-
-        if data.ErrorCode != 0:
-            self._info.print("从JQData获取股票代码表失败: {0}!".format(data.Data[0][0]), DyLogData.error)
-            return None
-
+        code.index.name = 'code'
+        code.reset_index(inplace=True)  # 把索引转成列
+        code.rename(columns={'name': 'pinyin_name', 'display_name': 'name'},
+                    inplace=True)
+        code['code'] = code['code'].str.replace('XSHE', 'SZ')
+        code['code'] = code['code'].str.replace('XSHG', 'SH')
         codes = {}
-        for code, name in zip(data.Data[1], data.Data[2]):
+        for code, name in zip(code.code, code.name):
             codes[code] = name
 
         self._info.print("从JQData获取股票代码表成功")
@@ -144,22 +136,23 @@ class DyStockDataJQData(object):
 
         progress = DyProgress(self._info)
         progress.init(len(dates))
+        JQcode = normalize_code(sectorCode)
 
         codesDict = OrderedDict() # {date: {code: name}}
         for date_ in dates:
             date = date_.strftime("%Y%m%d")
             date_ = date_.strftime("%Y-%m-%d")
 
-            data = w.wset("SectorConstituent", "date={0};sectorId={1}".format(date, self.sectorCodeJQDataMap[sectorCode]))
-
-            if data.ErrorCode != 0:
-                self._info.print("从JQData获取[{0}]股票代码表[{1}]失败: {2}!".format(DyStockCommon.sectors[sectorCode], date_, data.Data[0][0]), DyLogData.error)
-                return None
+            data = get_index_weights(index_id=JQcode,date=date_)
+            data.reset_index(inplace=True)  # 把时间索引转成列
+            data['code'] = data['code'].str.replace('XSHE', 'SZ')
+            data['code'] = data['code'].str.replace('XSHG', 'SH')
+            data.rename(columns={'display_name': 'name'},
+                        inplace=True)
 
             codes = {}
-            if data.Data:
-                for code, name in zip(data.Data[1], data.Data[2]):
-                    codes[code] = name
+            for code, name in zip(data.code, data.name):
+                codes[code] = name
 
             codesDict[date_] = codes
 
