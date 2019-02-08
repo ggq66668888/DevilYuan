@@ -46,9 +46,6 @@ class DyStockBackTestingStrategyPeriodsResultWidget(QTabWidget):
 
         self._strategyPeriodWidgets = {}
 
-    def mergePeriod(self, name):
-        pass
-
     def newPeriod(self, event):
         # unpack
         period = event.data['period']
@@ -124,4 +121,42 @@ class DyStockBackTestingStrategyPeriodsResultWidget(QTabWidget):
         profitOverLoss = '{:.2f}/{:.2f}'.format(profitOverLossPct/profitOverLossCount, profitOverLossCash/profitOverLossCount) if profitOverLossCount > 0 else 'N/A'
 
         return columns, [pnlRatio, annualPnlRatio, maxDrop, maxLoss, maxProfit, hitRate, profitOverLoss, sharpe]
+
+    def _combineInit(self, period, statsWidgets, posWidgets, dealsWidgets):
+        """
+            use self widgets to initialize itself
+        """
+        # new period
+        event = DyEvent()
+        event.data['period'] = period
+        self.newPeriod(event)
+
+        # combine
+        tabName = '[' + ','.join(period) + ']'
+        self._strategyPeriodWidgets[tabName].combineInit(statsWidgets, posWidgets, dealsWidgets)
+
+    def mergePeriod(self, periodsResultWidget):
+        # get data to be merged 
+        start, end = None, None
+        statsWidgets, posWidgets, dealsWidgets = [], [], []
+        for tabName in sorted(periodsResultWidget._strategyPeriodWidgets):
+            # get merged period
+            if start is None:
+                start = tabName[1:len('[2000-01-01')]
+
+            endTemp = tabName[len('[2000-01-01,'):-1]
+            if end is None:
+                end = endTemp
+            elif endTemp > end:
+                end = endTemp
+
+            # get widgets
+            widget = periodsResultWidget._strategyPeriodWidgets[tabName]
+            statsWidgets.append(widget.statsWidget)
+            posWidgets.append(widget.posWidget)
+            dealsWidgets.append(widget.dealsWidget)
+        
+        self._combineInit([start, end], statsWidgets, posWidgets, dealsWidgets)
+
+        
 
