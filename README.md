@@ -94,11 +94,19 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
     - crypto
     - gunicorn
 
+# 安装Q&A
+- pip install
+    - **Q**: `pip install`报如下错误
+    ```
+    pip is configured with locations that require TLS/SSL, however the ssl module in Python is not available.
+    ```
+    - **A**: 请到Windows开始菜单里，找到对应的Anaconda Prompt。然后在Anaconda Prompt里，执行pip
+
 # 运行
 因为程序需要读写文件，请到DevilYuan目录夹下以管理者权限运行`python DyMainWindow.py`
 
 # 运行后的步骤
-1. [配置DevilYuan系统](https://github.com/moyuanz/DevilYuan/blob/master/docs/Config.md)
+1. [配置DevilYuan系统](https://github.com/moyuanz/DevilYuan/blob/master/docs/config/Config.md)
 2. [下载历史数据](https://github.com/moyuanz/DevilYuan/blob/master/docs/data/DownloadHistoryData.md)
 3. [写一个实盘策略](https://github.com/moyuanz/DevilYuan/blob/master/docs/trade/WriteATradeStrategy.md)
 
